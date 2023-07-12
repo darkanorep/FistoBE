@@ -28,6 +28,7 @@ use App\Models\Transmit;
 use App\Models\Treasury;
 use App\Models\RequestorLogs;
 use App\Methods\GenericMethod;
+use App\Models\Audit;
 use App\Models\Release;
 use App\Models\File;
 use App\Models\Reverse;
@@ -289,7 +290,36 @@ class TransactionFlow{
             
 
             GenericMethod::transmitTransaction($model,$transaction_id,$tag_no,$reason_remarks,$date_now,$reason_id,$status,$distributed_to,$transaction_type );
-            GenericMethod::updateTransactionStatus($transaction_id,$request_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name,$transaction_type);
+            GenericMethod::updateTransactionStatus($id, $transaction_id,$request_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name,$transaction_type);
+        }elseif ($process == 'audit'){
+
+            // $model = new Audit;
+
+            $audit = new GenericMethod();
+            // $transaction = Transaction::find($id);
+
+            if($subprocess == 'receive'){
+                $status= 'audit-receive';
+            }else if($subprocess == 'hold'){
+                $status= 'audit-hold';
+            }else if($subprocess == 'return'){
+                $status= 'audit-return';
+            }else if($subprocess == 'void'){
+                $status= 'audit-void';
+            }else if($subprocess == 'approve'){
+                $status= 'audit-audit';
+                $audit->auditCheque($id, $request_id, $date_now, $status, null, null, $transaction_id, Auth::user()->id, null);
+            }else if(in_array($subprocess,['unhold','unreturn'])){
+                $status = GenericMethod::getStatus($process,$transaction);
+            }
+
+            if(!isset($status)){
+                return GenericMethod::resultResponse('invalid-access','','');
+            }
+
+            $state = $subprocess;
+            $audit->auditCheque($id, $request_id, $date_now, $status, $reason_id, $remarks, $transaction_id, null, null);
+            GenericMethod::updateTransactionStatus($id,$transaction_id,$request_id,$tag_no,$status,$state,$reason_id,$reason_description,$reason_remarks,$voucher_no,$voucher_month,$distributed_id,$distributed_name,$approver_id,$approver_name);
 
         }else if($process == 'cheque'){
             $account_titles = $cheque_account_titles;

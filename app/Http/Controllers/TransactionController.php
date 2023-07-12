@@ -820,6 +820,7 @@ class TransactionController extends Controller
         break;
 
       case 6: //Utilities
+        
         $duplicateUtilities = GenericMethod::validateTransactionByDateRange(
           $fields["document"]["from"],
           $fields["document"]["to"],
@@ -828,12 +829,19 @@ class TransactionController extends Controller
           $fields["document"]["supplier"]["id"],
           $fields["document"]["utility"]["location"]["id"],
           $fields["document"]["utility"]["category"]["name"],
-          $fields["document"]["utility"]["account_no"]["no"]
+          $fields["document"]["utility"]["account_no"]["no"],
+          data_get($fields, "document.utility.receipt_no"),
         );
 
         if (isset($duplicateUtilities)) {
           return $this->resultResponse("invalid", "", $duplicateUtilities);
         }
+
+        // $duplicateSOANumber = GenericMethod::validateSOANumber(data_get($fields, "document.utility.receipt_no"), data_get($fields, "document.supplier.id"));
+
+        // if (isset($duplicateSOANumber)) {
+        //   return $this->resultResponse("invalid", "", $duplicateSOANumber);
+        // }
 
         $transaction = GenericMethod::insertTransaction($transaction_id, null, $request_id, $date_requested, $fields);
         if (isset($transaction->transaction_id)) {
@@ -1307,6 +1315,7 @@ class TransactionController extends Controller
           $fields["document"]["utility"]["location"]["id"],
           $fields["document"]["utility"]["category"]["name"],
           $fields["document"]["utility"]["account_no"]["no"],
+          data_get($fields, "document.utility.receipt_no"),
           $id
         );
         if (isset($duplicateUtilities)) {

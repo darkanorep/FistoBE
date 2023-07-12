@@ -2,40 +2,42 @@
 
 namespace App\Methods;
 
-use App\Exceptions\FistoException;
-use App\Exceptions\FistoLaravelException;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
-// For Pagination with Collection
-use Illuminate\Support\Collection;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
-
+use Carbon\Carbon;
 use App\Models\User;
-use App\Models\VoucherAccountTitle;
+use App\Models\Audit;
+use App\Models\Cheque;
+// For Pagination with Collection
+use App\Models\Reason;
 use App\Models\POBatch;
-use App\Models\TransactionClient;
-use App\Models\ReferrenceBatch;
+use App\Models\Release;
+
+use App\Models\Reverse;
+use App\Models\Tagging;
+use App\Models\Approver;
+use App\Models\Transfer;
+use App\Models\Treasury;
+use App\Models\Associate;
+use App\Models\DebitBatch;
 use App\Models\Transaction;
+use Illuminate\Support\Str;
 use App\Models\PayrollClient;
 use App\Models\RequestorLogs;
-use App\Models\Tagging;
-use App\Models\Associate;
-use App\Models\Approver;
-use App\Models\Treasury;
-use App\Models\Cheque;
-use App\Models\Release;
-use App\Models\Transfer;
-use App\Models\Reason;
-use App\Models\Reverse;
-use App\Models\DebitBatch;
-use App\Models\ClearingAccountTitle;
-
-use App\Models\UserDocumentCategory;
 use Illuminate\Routing\Route;
+use App\Models\ReferrenceBatch;
+use App\Models\TransactionClient;
+use App\Exceptions\FistoException;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use App\Models\VoucherAccountTitle;
+use App\Models\ClearingAccountTitle;
+use App\Models\UserDocumentCategory;
 
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
+
+use App\Exceptions\FistoLaravelException;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class GenericMethod
 {
@@ -257,6 +259,9 @@ class GenericMethod
     } elseif ($process == "file") {
       $model = new Associate();
       $field = "";
+    } elseif ($process == "audit") {
+      $model = new Audit();
+      $field = "";
     }
 
     $status = $process . "-" . $process;
@@ -406,6 +411,20 @@ class GenericMethod
       "reason_id" => $reason_id,
       "transaction_type" => $transaction_type,
       "status" => $status,
+    ]);
+  }
+
+  public function auditCheque($transaction_id, $request_id, $date_received, $status, $reason_id, $remarks, $transaction_no, $user_id, $date_audit){
+    Audit::Create([
+      'transaction_id' => $transaction_id,
+      'request_id' => $request_id,
+      'date_received' => $date_received,
+      'status' => $status,
+      'reason_id' => $reason_id,
+      'remarks' => $remarks,
+      'transaction_no' => $transaction_no,
+      'user_id' => $user_id,
+      'date_audit' => $date_audit
     ]);
   }
 
@@ -3230,6 +3249,7 @@ class GenericMethod
     $location_id,
     $category,
     $account_no,
+    $receipt_no,
     $id = 0
   ) {
     $transactions = DB::table("transactions")
@@ -3261,6 +3281,7 @@ class GenericMethod
         $query->where("id", "<>", $id);
       })
       ->get();
+
     if (count($transactions) > 0) {
       return GenericMethod::resultLaravelFormat(
         [
@@ -3269,7 +3290,7 @@ class GenericMethod
           "document.company.id",
           "document.department.id",
           "document.utility.location.id",
-          "document.utility.category.id",
+          "document.utility.category.id"
         ],
         [
           ["from has already been taken."],
@@ -3277,11 +3298,38 @@ class GenericMethod
           ["Company has already been taken."],
           ["Department has already been taken."],
           ["Utility Location has already been taken."],
-          ["Utility Category has already been taken."],
+          ["Utility Category has already been taken."]
         ]
       );
     }
+
+    $transaction = Transaction::where('utilities_receipt_no', $receipt_no)
+    ->where('supplier_id', $supplier_id)
+    ->when($id, function ($query, $id) {
+        $query->where("id", "<>", $id);
+    })
+    ->get();
+
+    if (count($transaction) > 0) {
+        return static::resultLaravelFormat(["document.utility.receipt_no"], ["SOA number already exists."]);
+    }
   }
+
+  // public static function validateSOANumber($receipt_no, $supplier_id, $id = 0) 
+  // {
+
+  //   $transaction = Transaction::where('utilities_receipt_no', $receipt_no)
+  //   ->where('supplier_id', $supplier_id)
+  //   ->when($id, function ($query, $id) {
+  //     $query->where("id", "<>", $id);
+  //   })
+  //   ->get();
+  
+  //   if (count($transaction) > 0) {
+  //     return GenericMethod::resultLaravelFormat("document.utility.receipt_no", ["SOA number already exist."]);
+  //   }
+    
+  // }
 
   public static function validatePayroll(
     $payroll_from,
@@ -3383,7 +3431,7 @@ class GenericMethod
   {
     $validateTransactionCount = Transaction::where("company_id", $fields["document"]["company"]["id"])
       ->where("referrence_no", $fields["document"]["reference"]["no"])
-      ->where("supplier_id", $fields["document"]["supplier"]["id"])
+      // ->where("supplier_id", $fields["document"]["supplier"]["id"])
       ->when($id, function ($query, $id) {
         $query->where("id", "<>", $id);
       })
