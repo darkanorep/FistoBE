@@ -1362,6 +1362,7 @@ class GenericMethod
               // "last_name" => $fields["requestor"]["last_name"],
               // "suffix" => $fields["requestor"]["suffix"],
               // "department_details" => $fields["requestor"]["department"],
+
               "users_id" => $requestor->id,
               "id_prefix" => $requestor->id_prefix,
               "id_no" => $requestor->id_no,
@@ -1370,6 +1371,7 @@ class GenericMethod
               "last_name" => $requestor->last_name,
               "suffix" => $requestor->suffix,
               "department_details" => $requestor->department[0]['name'],
+
               "document_id" => $fields["document"]["id"],
               "category_id" => $fields["document"]["category"]["id"],
               "category" => $fields["document"]["category"]["name"],
@@ -1469,6 +1471,7 @@ class GenericMethod
               // "last_name" => $fields["requestor"]["last_name"],
               // "suffix" => $fields["requestor"]["suffix"],
               // "department_details" => $fields["requestor"]["department"],
+
               "users_id" => $requestor->id,
               "id_prefix" => $requestor->id_prefix,
               "id_no" => $requestor->id_no,
@@ -1477,6 +1480,7 @@ class GenericMethod
               "last_name" => $requestor->last_name,
               "suffix" => $requestor->suffix,
               "department_details" => $requestor->department[0]['name'],
+
               "document_id" => $fields["document"]["id"],
               "category_id" => $fields["document"]["category"]["id"],
               "category" => $fields["document"]["category"]["name"],
@@ -1574,6 +1578,7 @@ class GenericMethod
               // "last_name" => $fields["requestor"]["last_name"],
               // "suffix" => $fields["requestor"]["suffix"],
               // "department_details" => $fields["requestor"]["department"],
+
               "users_id" => $requestor->id,
               "id_prefix" => $requestor->id_prefix,
               "id_no" => $requestor->id_no,
@@ -1582,6 +1587,7 @@ class GenericMethod
               "last_name" => $requestor->last_name,
               "suffix" => $requestor->suffix,
               "department_details" => $requestor->department[0]['name'],
+
               "document_id" => $fields["document"]["id"],
               "category_id" => $fields["document"]["category"]["id"],
               "category" => $fields["document"]["category"]["name"],
@@ -3270,6 +3276,7 @@ class GenericMethod
             });
           });
       })
+      ->where("utilities_receipt_no", $receipt_no)
       ->where("utilities_account_no", $account_no)
       ->where("company_id", $company_id)
       ->where("department_id", $department_id)
@@ -3290,7 +3297,8 @@ class GenericMethod
           "document.company.id",
           "document.department.id",
           "document.utility.location.id",
-          "document.utility.category.id"
+          "document.utility.category.id",
+          "document.utility.receipt_no"
         ],
         [
           ["from has already been taken."],
@@ -3298,38 +3306,28 @@ class GenericMethod
           ["Company has already been taken."],
           ["Department has already been taken."],
           ["Utility Location has already been taken."],
-          ["Utility Category has already been taken."]
+          ["Utility Category has already been taken."],
+          ["SOA number has already been taken."]
         ]
       );
     }
+  }
+
+  public static function validateSOANumber($receipt_no, $supplier_id, $id = 0) 
+  {
 
     $transaction = Transaction::where('utilities_receipt_no', $receipt_no)
     ->where('supplier_id', $supplier_id)
     ->when($id, function ($query, $id) {
-        $query->where("id", "<>", $id);
+      $query->where("id", "<>", $id);
     })
     ->get();
-
-    if (count($transaction) > 0) {
-        return static::resultLaravelFormat(["document.utility.receipt_no"], ["SOA number already exists."]);
-    }
-  }
-
-  // public static function validateSOANumber($receipt_no, $supplier_id, $id = 0) 
-  // {
-
-  //   $transaction = Transaction::where('utilities_receipt_no', $receipt_no)
-  //   ->where('supplier_id', $supplier_id)
-  //   ->when($id, function ($query, $id) {
-  //     $query->where("id", "<>", $id);
-  //   })
-  //   ->get();
   
-  //   if (count($transaction) > 0) {
-  //     return GenericMethod::resultLaravelFormat("document.utility.receipt_no", ["SOA number already exist."]);
-  //   }
+    if (count($transaction) > 0) {
+      return GenericMethod::resultLaravelFormat("document.utility.receipt_no", ["SOA number already exist."]);
+    }
     
-  // }
+  }
 
   public static function validatePayroll(
     $payroll_from,
@@ -3431,7 +3429,7 @@ class GenericMethod
   {
     $validateTransactionCount = Transaction::where("company_id", $fields["document"]["company"]["id"])
       ->where("referrence_no", $fields["document"]["reference"]["no"])
-      // ->where("supplier_id", $fields["document"]["supplier"]["id"])
+      ->where("supplier_id", $fields["document"]["supplier"]["id"])
       ->when($id, function ($query, $id) {
         $query->where("id", "<>", $id);
       })

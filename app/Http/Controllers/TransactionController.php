@@ -837,12 +837,6 @@ class TransactionController extends Controller
           return $this->resultResponse("invalid", "", $duplicateUtilities);
         }
 
-        // $duplicateSOANumber = GenericMethod::validateSOANumber(data_get($fields, "document.utility.receipt_no"), data_get($fields, "document.supplier.id"));
-
-        // if (isset($duplicateSOANumber)) {
-        //   return $this->resultResponse("invalid", "", $duplicateSOANumber);
-        // }
-
         $transaction = GenericMethod::insertTransaction($transaction_id, null, $request_id, $date_requested, $fields);
         if (isset($transaction->transaction_id)) {
           return $this->resultResponse("save", "Transaction", []);
@@ -1018,8 +1012,6 @@ class TransactionController extends Controller
 
           }
 
-          //----------------------------------------------------------------------------------------------------
-
           if (gettype($getAndValidatePOBalance) == "object") {
             return $this->resultResponse("invalid", "", $getAndValidatePOBalance);
           }
@@ -1085,12 +1077,6 @@ class TransactionController extends Controller
             $po_total_amount,
             strtoupper($fields["document"]["payment_type"])
           ); 
-
-          $comp_id = $transaction->company_id;
-
-          POBatch::where('request_id', $request_id)->update([
-            'comp_id' => $comp_id
-          ]);
 
           if (isset($transaction->transaction_id)) {
             return $this->resultResponse("save", "Transaction", []);

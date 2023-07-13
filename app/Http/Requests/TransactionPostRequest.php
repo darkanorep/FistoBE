@@ -27,16 +27,16 @@ class TransactionPostRequest extends FormRequest
     public function rules()
     {        
         return [
-            // "requestor.id" => 'required'
-            // , "requestor.id_prefix" => 'required'
-            // , "requestor.id_no" => 'required'
-            // , "requestor.role" => 'required'
-            // , "requestor.position" => 'required'
-            // , "requestor.first_name" => 'required'
-            // , "requestor.middle_name" => 'nullable'
-            // , "requestor.last_name" => 'required'
-            // , "requestor.suffix" => 'nullable'
-            // , "requestor.department" => 'required'
+            "requestor.id" => 'required'
+            , "requestor.id_prefix" => 'required'
+            , "requestor.id_no" => 'required'
+            , "requestor.role" => 'required'
+            , "requestor.position" => 'required'
+            , "requestor.first_name" => 'required'
+            , "requestor.middle_name" => 'nullable'
+            , "requestor.last_name" => 'required'
+            , "requestor.suffix" => 'nullable'
+            , "requestor.department" => 'required',
            
             "document.id" => 'required'
             , "document.capex_no" => 'required_if:document.id,5'
