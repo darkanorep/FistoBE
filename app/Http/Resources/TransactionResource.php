@@ -220,6 +220,7 @@ class TransactionResource extends JsonResource
           $q->select([
             "is_add",
             "is_editable",
+            "is_modifiable",
             "p_o_batches.id as id",
             "po_no as no",
             "po_amount as amount",
@@ -995,6 +996,9 @@ class TransactionResource extends JsonResource
     if ($this->document_type == "PRM Multiple") {
       switch ($this->category) {
         case "additional rental":
+          break;
+        case "lounge rental":
+          break;
         case "rental":
           $prm_fields = Transaction::where("transaction_id", $this->transaction_id)
             ->select([

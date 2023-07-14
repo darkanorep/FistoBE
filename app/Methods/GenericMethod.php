@@ -1284,6 +1284,9 @@ class GenericMethod
 
       switch ($category) {
         case "additional rental":
+          break;
+        case "lounge rental":
+          break;
         case "rental":
           $errors = [];
           $error_date_format = [];

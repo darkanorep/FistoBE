@@ -23,7 +23,8 @@ class POBatch extends Model
         'rr_code',
         'po_group_no',
         'rr_group',
-        'po_total_amount'
+        'po_total_amount',
+        'is_modifiable'
     ];
 
     protected $casts = [
@@ -43,4 +44,5 @@ class POBatch extends Model
     public function request() {
         return $this->belongsTo(Transaction::class, 'request_id', 'request_id');
     }
+
 }

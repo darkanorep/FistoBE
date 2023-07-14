@@ -1004,7 +1004,6 @@ class TransactionController extends Controller
             for ($i = 0; $i < count($currentRequestids); $i++) {
               $ids [] = $currentRequestids[$i];
             }
-  
             //enable new transaction
             Transaction::where('request_id', end($ids))->update([
               'is_not_editable' => true
@@ -1040,9 +1039,14 @@ class TransactionController extends Controller
               strtoupper($fields["document"]["payment_type"])
             );
 
+            POBatch::where('request_id', $request_id)->where('po_no', reset($fields["po_group"])["no"])->update([
+              'is_modifiable' => true
+            ]);
+
             if (isset($transaction->transaction_id)) {
               return $this->resultResponse("save", "Transaction", []);
             }
+
           }
 
           $po_total_amount = GenericMethod::getPOTotalAmount($request_id, $fields["po_group"]);
@@ -1076,7 +1080,19 @@ class TransactionController extends Controller
             $fields["po_group"],
             $po_total_amount,
             strtoupper($fields["document"]["payment_type"])
-          ); 
+          );
+
+          // POBatch::where('request_id', $request_id)->update([
+          //   'is_modifiable' => true
+          // ]);
+
+          return $currentPO = POBatch::where('po_no', last($fields["po_group"])["no"])->pluck('request_id');
+          
+          if ($currentPO) {
+            POBatch::where('request_id', reset($currentPO))->update([
+              'is_modifiable' => true
+            ]);
+          }
 
           if (isset($transaction->transaction_id)) {
             return $this->resultResponse("save", "Transaction", []);
@@ -1465,8 +1481,12 @@ class TransactionController extends Controller
           }
         }
 
+
         $currentTransaction = Transaction::findOrFail($id);
 
+        $result = POBatch::with('request')->where('request_id', $currentTransaction->request_id)->get();
+        $isNotEditable = $result[0]['request']['is_not_editable'];
+      
         if ($currentTransaction->is_not_editable == 1) {
             // $currentTransaction->receipt()->create($currentTransaction->toArray());
 
@@ -1496,6 +1516,7 @@ class TransactionController extends Controller
             // $currentTransaction->column_name = $currentTransaction->receipt->column_name;
 
             // Save the updated transaction
+
             $currentTransaction->save();
 
             return $this->resultResponse("update", "Transaction", []);
@@ -1757,8 +1778,13 @@ class TransactionController extends Controller
 
         $currentRequestIds = POBatch::whereIn('po_no', $poNos)->pluck('request_id')->toArray();
 
+
         Transaction::where('request_id', end($currentRequestIds)-1)->update([
           'is_not_editable' => false
+        ]);
+
+        POBatch::where('request_id', end($currentRequestIds)-1)->update([
+          'is_modifiable' => true
         ]);
 
       }
