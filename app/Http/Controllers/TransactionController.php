@@ -1086,10 +1086,18 @@ class TransactionController extends Controller
           //   'is_modifiable' => true
           // ]);
 
-          return $currentPO = POBatch::where('po_no', last($fields["po_group"])["no"])->pluck('request_id');
+          // $currentPO = POBatch::where('po_no', last($fields["po_group"])["no"])->pluck('request_id');
           
-          if ($currentPO) {
-            POBatch::where('request_id', reset($currentPO))->update([
+          // if ($currentPO) {
+          //   POBatch::where('request_id', reset($currentPO))->update([
+          //     'is_modifiable' => true
+          //   ]);
+          // }
+
+          $isAdd = POBatch::where('request_id', $request_id)->first();
+
+          if ($isAdd && $isAdd->is_add == false && $isAdd->is_editable == true) {
+            $isAdd->update([
               'is_modifiable' => true
             ]);
           }
