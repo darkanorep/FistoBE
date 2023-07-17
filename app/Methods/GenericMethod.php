@@ -3258,7 +3258,7 @@ class GenericMethod
     $location_id,
     $category,
     $account_no,
-    $receipt_no,
+    // $receipt_no,
     $id = 0
   ) {
     $transactions = DB::table("transactions")
@@ -3279,7 +3279,7 @@ class GenericMethod
             });
           });
       })
-      ->where("utilities_receipt_no", $receipt_no)
+      // ->where("utilities_receipt_no", $receipt_no)
       ->where("utilities_account_no", $account_no)
       ->where("company_id", $company_id)
       ->where("department_id", $department_id)
@@ -3301,7 +3301,7 @@ class GenericMethod
           "document.department.id",
           "document.utility.location.id",
           "document.utility.category.id",
-          "document.utility.receipt_no"
+          // "document.utility.receipt_no"
         ],
         [
           ["from has already been taken."],
@@ -3310,7 +3310,7 @@ class GenericMethod
           ["Department has already been taken."],
           ["Utility Location has already been taken."],
           ["Utility Category has already been taken."],
-          ["SOA number has already been taken."]
+          // ["SOA number has already been taken."]
         ]
       );
     }

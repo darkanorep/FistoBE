@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Validator;
+use App\Models\Document;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 
 
 class TransactionPostRequest extends FormRequest
@@ -26,6 +28,10 @@ class TransactionPostRequest extends FormRequest
      */
     public function rules()
     {        
+
+        // $supplierId = $this->input('document.supplier.id');
+        // $receiptNo = $this->input('document.utility.receipt_no');
+
         return [
             "requestor.id" => 'required'
             , "requestor.id_prefix" => 'required'
@@ -63,7 +69,13 @@ class TransactionPostRequest extends FormRequest
             , "po_group.*.amount" => 'required|numeric'
             , "po_group.*.rr_no" => 'nullable'
 
-            , "document.utility.receipt_no" => 'nullable'
+            , 'document.utility.receipt_no' => [
+                'required_if:document.id,6',
+                // Rule::unique('transactions', 'utilities_receipt_no')
+                // ->where(function ($query) use ($supplierId, $receiptNo) {
+                //     $query->where('supplier_id', $supplierId)->where('utilities_receipt_no', $receiptNo);
+                // })
+            ]
             , "document.utility.consumption" => 'nullable'
 
             , "document.utility.location.id" => 'required_if:document.id,6'
@@ -151,7 +163,7 @@ class TransactionPostRequest extends FormRequest
              "document.from" => 'From'
             , "document.to" => 'To'
             , "document.utility.consumption" => 'Consumption'
-            , "documentutility.receipt_no" => 'Receipt number'
+            , "document.utility.receipt_no" => 'SOA number'
             , "document.utility.location.id" => 'Utility Location ID'
             , "document.utility.location.name" => 'Utility Location Name'
             , "document.utility.category.id" => 'Utility Category ID'
@@ -191,13 +203,17 @@ class TransactionPostRequest extends FormRequest
     }
     
     public function messages(){
+
+        $document = Document::where('id', $this->input('document.id'))->value('type');
+
         return [
             'required' => ':attribute is required.',
             'required_if' => ':attribute is required.',
             'numeric' => ':attribute must be in number format.',
             'min' => ':attribute amount may not be greater than :min.',
-            'max' => ':attribute amount may not be greater than :max.'
+            'max' => ':attribute amount may not be greater than :max.',
             // "document.amount.numeric"=>"Document amount must be numeric"
+            'document.utility.receipt_no.required_if' => 'SOA/Reference Number field is required when document type is ' . ($document ? $document : '')
         ];
     }
 }

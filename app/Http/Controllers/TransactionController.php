@@ -20,6 +20,7 @@ use App\Exceptions\FistoException;
 use Carbon\Carbon;
 
 use App\Http\Requests\TransactionPostRequest;
+use Illuminate\Validation\Rule;
 
 class TransactionController extends Controller
 {
@@ -830,8 +831,19 @@ class TransactionController extends Controller
           $fields["document"]["utility"]["location"]["id"],
           $fields["document"]["utility"]["category"]["name"],
           $fields["document"]["utility"]["account_no"]["no"],
-          data_get($fields, "document.utility.receipt_no"),
+          // data_get($fields, "document.utility.receipt_no"),
         );
+
+        $request->validate([
+          'document.utility.receipt_no' => [
+            'required',
+            Rule::unique('transactions', 'utilities_receipt_no')->where(function ($query) use ($fields){
+              $query->where('supplier_id', $fields["document"]["supplier"]["id"])
+              ->where('utilities_receipt_no', data_get($fields, "document.utility.receipt_no")
+              );
+            })
+          ]
+        ]);
 
         if (isset($duplicateUtilities)) {
           return $this->resultResponse("invalid", "", $duplicateUtilities);
@@ -1043,6 +1055,16 @@ class TransactionController extends Controller
               'is_modifiable' => true
             ]);
 
+            $isAdd = POBatch::where('request_id', $request_id)->get();
+
+            foreach ($isAdd as $record) {
+              if ($record->is_add == true && $record->is_editable == true) {
+                  $test = $record->update([
+                      'is_modifiable' => true
+                  ]);
+              }
+            }
+
             if (isset($transaction->transaction_id)) {
               return $this->resultResponse("save", "Transaction", []);
             }
@@ -1094,13 +1116,16 @@ class TransactionController extends Controller
           //   ]);
           // }
 
-          $isAdd = POBatch::where('request_id', $request_id)->first();
+          $isAdd = POBatch::where('request_id', $request_id)->get();
 
-          if ($isAdd && $isAdd->is_add == false && $isAdd->is_editable == true) {
-            $isAdd->update([
-              'is_modifiable' => true
-            ]);
+          foreach ($isAdd as $record) {
+            if ($record->is_add == false && $record->is_editable == true) {
+                $record->update([
+                    'is_modifiable' => true
+                ]);
+            }
           }
+          
 
           if (isset($transaction->transaction_id)) {
             return $this->resultResponse("save", "Transaction", []);
@@ -1791,9 +1816,9 @@ class TransactionController extends Controller
           'is_not_editable' => false
         ]);
 
-        POBatch::where('request_id', end($currentRequestIds)-1)->update([
-          'is_modifiable' => true
-        ]);
+        // POBatch::where('request_id', end($currentRequestIds)-1)->update([
+        //   'is_modifiable' => true
+        // ]);
 
       }
     }
