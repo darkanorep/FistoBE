@@ -830,20 +830,19 @@ class TransactionController extends Controller
           $fields["document"]["supplier"]["id"],
           $fields["document"]["utility"]["location"]["id"],
           $fields["document"]["utility"]["category"]["name"],
-          $fields["document"]["utility"]["account_no"]["no"],
-          // data_get($fields, "document.utility.receipt_no"),
+          $fields["document"]["utility"]["account_no"]["no"]
         );
 
-        $request->validate([
-          'document.utility.receipt_no' => [
-            'required',
-            Rule::unique('transactions', 'utilities_receipt_no')->where(function ($query) use ($fields){
-              $query->where('supplier_id', $fields["document"]["supplier"]["id"])
-              ->where('utilities_receipt_no', data_get($fields, "document.utility.receipt_no")
-              );
-            })
-          ]
-        ]);
+        // $request->validate([
+        //   'document.utility.receipt_no' => [
+        //     'required',
+        //     Rule::unique('transactions', 'utilities_receipt_no')->where(function ($query) use ($fields){
+        //       $query->where('supplier_id', $fields["document"]["supplier"]["id"])
+        //       ->where('utilities_receipt_no', data_get($fields, "document.utility.receipt_no")
+        //       );
+        //     })
+        //   ]
+        // ]);
 
         if (isset($duplicateUtilities)) {
           return $this->resultResponse("invalid", "", $duplicateUtilities);
@@ -1059,7 +1058,7 @@ class TransactionController extends Controller
 
             foreach ($isAdd as $record) {
               if ($record->is_add == true && $record->is_editable == true) {
-                  $test = $record->update([
+                  $record->update([
                       'is_modifiable' => true
                   ]);
               }
@@ -1116,16 +1115,20 @@ class TransactionController extends Controller
           //   ]);
           // }
 
-          $isAdd = POBatch::where('request_id', $request_id)->get();
+          // $isAdd = POBatch::where('request_id', $request_id)->get();
 
-          foreach ($isAdd as $record) {
-            if ($record->is_add == false && $record->is_editable == true) {
-                $record->update([
-                    'is_modifiable' => true
-                ]);
-            }
-          }
-          
+          // foreach ($isAdd as $record) {
+          //   if ($record->is_add == false && $record->is_editable == true) {
+          //       $record->update([
+          //           'is_modifiable' => true
+          //       ]);
+          //   }
+          // }
+
+          POBatch::where('request_id', $request_id)->where('is_add', false)
+            ->where('is_editable', true)
+            ->update(['is_modifiable' => true]);
+
 
           if (isset($transaction->transaction_id)) {
             return $this->resultResponse("save", "Transaction", []);
@@ -1350,9 +1353,9 @@ class TransactionController extends Controller
           $fields["document"]["utility"]["location"]["id"],
           $fields["document"]["utility"]["category"]["name"],
           $fields["document"]["utility"]["account_no"]["no"],
-          data_get($fields, "document.utility.receipt_no"),
           $id
         );
+        
         if (isset($duplicateUtilities)) {
           return $this->resultResponse("invalid", "", $duplicateUtilities);
         }
@@ -1517,8 +1520,8 @@ class TransactionController extends Controller
 
         $currentTransaction = Transaction::findOrFail($id);
 
-        $result = POBatch::with('request')->where('request_id', $currentTransaction->request_id)->get();
-        $isNotEditable = $result[0]['request']['is_not_editable'];
+        // $result = POBatch::with('request')->where('request_id', $currentTransaction->request_id)->get();
+        // $isNotEditable = $result[0]['request']['is_not_editable'];
       
         if ($currentTransaction->is_not_editable == 1) {
             // $currentTransaction->receipt()->create($currentTransaction->toArray());
@@ -1764,6 +1767,41 @@ class TransactionController extends Controller
       return $this->resultResponse("invalid", "", $errorMessage);
     }
     return $this->resultResponse("success-no-content", "", []);
+  }
+
+  public function validateSOANumber(Request $request) {
+
+    $transaction_id = $request->transaction_id;
+
+    $existSOA = Transaction::where(function ($query) use ($request) {
+      $query->where(function ($query) use ($request) {
+          $query
+            ->where(function ($query) use ($request) {
+              $query->where("utilities_from", "<", $request->from)->where("utilities_to", ">", $request->from);
+            })
+            ->orWhere(function ($query) use ($request) {
+              $query->where("utilities_from", "<", $request->to)->where("utilities_to", ">", $request->to);
+            });
+        })
+        ->orWhere(function ($query) use ($request) {
+          $query->where(function ($query) use ($request) {
+            $query->where("utilities_from", ">=", $request->from)->where("utilities_to", "<=", $request->to);
+          });
+        });
+    })
+    ->where('utilities_receipt_no', $request->utilities_receipt_no)
+    ->where('supplier_id', $request->supplier_id)
+    ->where('company_id', $request->company_id)
+    ->where('state', '!=', 'void')
+    ->when(isset($transaction_id), function ($query) use ($transaction_id) {
+      $query->where("id", "<>", $transaction_id);
+    })
+    ->count();
+
+    if ($existSOA > 0) {
+      return $this->resultResponse("invalid", "", GenericMethod::resultLaravelFormat("document.utility.receipt_no", ["SOA/Reference number already exist."]));
+    }
+
   }
 
   public function validatePCFName(Request $request)

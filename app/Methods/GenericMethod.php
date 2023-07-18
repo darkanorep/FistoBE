@@ -1840,6 +1840,17 @@ class GenericMethod
     $currentTransaction->suffix = $fields["requestor"]["suffix"];
     $currentTransaction->department_details = $fields["requestor"]["department"];
 
+    // $requestor =  Auth::user();
+
+    // $currentTransaction->users_id = $requestor->id;
+    // $currentTransaction->id_prefix = $requestor->id_prefix;
+    // $currentTransaction->id_no = $requestor->id_no;
+    // $currentTransaction->first_name = $requestor->first_name;
+    // $currentTransaction->middle_name = $requestor->middle_name;
+    // $currentTransaction->last_name = $requestor->last_name;
+    // $currentTransaction->suffix = $requestor->suffix;
+    // $currentTransaction->department_details = $requestor->department[0]['name'];
+
     $currentTransaction->document_no = $document_no;
     $currentTransaction->document_date = $document_date;
     $currentTransaction->category_id = $category_id;
@@ -2068,6 +2079,19 @@ class GenericMethod
         "rr_group" => $rr_group,
         "po_total_amount" => $po_total_amount,
       ]);
+
+      POBatch::where('request_id', $request_id)->where('is_editable', true)->update(['is_modifiable' => true]);
+
+      // $isAdd = POBatch::where('request_id', $request_id)->get();
+
+      // foreach ($isAdd as $record) {
+      //   if ($record->is_editable) {
+      //     $record->update([
+      //         'is_modifiable' => true
+      //     ]);
+      //   }
+      // }
+    
     }
   }
 
@@ -3258,7 +3282,6 @@ class GenericMethod
     $location_id,
     $category,
     $account_no,
-    // $receipt_no,
     $id = 0
   ) {
     $transactions = DB::table("transactions")
@@ -3279,7 +3302,6 @@ class GenericMethod
             });
           });
       })
-      // ->where("utilities_receipt_no", $receipt_no)
       ->where("utilities_account_no", $account_no)
       ->where("company_id", $company_id)
       ->where("department_id", $department_id)
@@ -3301,7 +3323,6 @@ class GenericMethod
           "document.department.id",
           "document.utility.location.id",
           "document.utility.category.id",
-          // "document.utility.receipt_no"
         ],
         [
           ["from has already been taken."],
@@ -3309,8 +3330,7 @@ class GenericMethod
           ["Company has already been taken."],
           ["Department has already been taken."],
           ["Utility Location has already been taken."],
-          ["Utility Category has already been taken."],
-          // ["SOA number has already been taken."]
+          ["Utility Category has already been taken."]
         ]
       );
     }

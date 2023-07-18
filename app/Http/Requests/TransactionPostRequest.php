@@ -71,9 +71,9 @@ class TransactionPostRequest extends FormRequest
 
             , 'document.utility.receipt_no' => [
                 'required_if:document.id,6',
-                // Rule::unique('transactions', 'utilities_receipt_no')
-                // ->where(function ($query) use ($supplierId, $receiptNo) {
-                //     $query->where('supplier_id', $supplierId)->where('utilities_receipt_no', $receiptNo);
+                // Rule::unique('transactions', 'utilities_receipt_no')            
+                // ->where(function ($query) {
+                //     $query->where('supplier_id', $this->input('document.supplier.id'))->where('utilities_receipt_no', $this->input('document.utility.receipt_no'));
                 // })
             ]
             , "document.utility.consumption" => 'nullable'
