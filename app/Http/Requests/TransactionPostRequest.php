@@ -93,7 +93,9 @@ class TransactionPostRequest extends FormRequest
             , "document.payroll.clients.*.name" => 'required_if:document.id,7'
             , "document.payroll.type" => 'required_if:document.id,7'
             , "document.payroll.category.id" => 'required_if:document.id,7'
-            , "document.payroll.category.name" => 'required_if:document.id,7'
+            , "document.payroll.category.name" => 'required_if:document.id,7',
+            "document.payroll.control_no" => 'nullable'
+            
             
             , "document.reference.id" => 'required_if:document.id,4'
             , "document.reference.no" => 'required_if:document.id,4'

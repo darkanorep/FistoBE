@@ -1163,6 +1163,7 @@ class GenericMethod
         "payroll_to" => $fields["document"]["to"],
         "payroll_category_id" => $fields["document"]["payroll"]["category"]["id"],
         "payroll_category" => $fields["document"]["payroll"]["category"]["name"],
+        "payroll_control_no" => $fields["document"]["payroll"]["control_no"],
         "payroll_type" => $fields["document"]["payroll"]["type"],
         "payroll_client" => $fields["document"]["payroll"]["clients"],
         "request_id" => $request_id,
@@ -1811,6 +1812,7 @@ class GenericMethod
     $payroll_category_name = isset($fields["document"]["payroll"]["category"]["name"])
       ? $fields["document"]["payroll"]["category"]["name"]
       : null;
+    $payroll_control_no = $fields->input("document.payroll.control_no", null);
     $clients = isset($fields["document"]["payroll"]["clients"]) ? $fields["document"]["payroll"]["clients"] : null;
 
     // PCF
@@ -1831,25 +1833,25 @@ class GenericMethod
     $balance_po_ref_amount = isset($balance_po_ref_amount) ? $balance_po_ref_amount : null;
 
     $currentTransaction->transaction_id = $fields["transaction"]["no"];
-    $currentTransaction->users_id = $fields["requestor"]["id"];
-    $currentTransaction->id_prefix = $fields["requestor"]["id_prefix"];
-    $currentTransaction->id_no = $fields["requestor"]["id_no"];
-    $currentTransaction->first_name = $fields["requestor"]["first_name"];
-    $currentTransaction->middle_name = $fields["requestor"]["middle_name"];
-    $currentTransaction->last_name = $fields["requestor"]["last_name"];
-    $currentTransaction->suffix = $fields["requestor"]["suffix"];
-    $currentTransaction->department_details = $fields["requestor"]["department"];
+    // $currentTransaction->users_id = $fields["requestor"]["id"];
+    // $currentTransaction->id_prefix = $fields["requestor"]["id_prefix"];
+    // $currentTransaction->id_no = $fields["requestor"]["id_no"];
+    // $currentTransaction->first_name = $fields["requestor"]["first_name"];
+    // $currentTransaction->middle_name = $fields["requestor"]["middle_name"];
+    // $currentTransaction->last_name = $fields["requestor"]["last_name"];
+    // $currentTransaction->suffix = $fields["requestor"]["suffix"];
+    // $currentTransaction->department_details = $fields["requestor"]["department"];
 
-    // $requestor =  Auth::user();
+    $requestor =  Auth::user();
 
-    // $currentTransaction->users_id = $requestor->id;
-    // $currentTransaction->id_prefix = $requestor->id_prefix;
-    // $currentTransaction->id_no = $requestor->id_no;
-    // $currentTransaction->first_name = $requestor->first_name;
-    // $currentTransaction->middle_name = $requestor->middle_name;
-    // $currentTransaction->last_name = $requestor->last_name;
-    // $currentTransaction->suffix = $requestor->suffix;
-    // $currentTransaction->department_details = $requestor->department[0]['name'];
+    $currentTransaction->users_id = $requestor->id;
+    $currentTransaction->id_prefix = $requestor->id_prefix;
+    $currentTransaction->id_no = $requestor->id_no;
+    $currentTransaction->first_name = $requestor->first_name;
+    $currentTransaction->middle_name = $requestor->middle_name;
+    $currentTransaction->last_name = $requestor->last_name;
+    $currentTransaction->suffix = $requestor->suffix;
+    $currentTransaction->department_details = $requestor->department[0]['name'];
 
     $currentTransaction->document_no = $document_no;
     $currentTransaction->document_date = $document_date;
@@ -1897,6 +1899,7 @@ class GenericMethod
     $currentTransaction->payroll_type = $payroll_type;
     $currentTransaction->payroll_category_id = $payroll_category_id;
     $currentTransaction->payroll_category = $payroll_category_name;
+    $currentTransaction->payroll_control_no = $payroll_control_no;
     $currentTransaction->payroll_client = $clients;
 
     // PCF
@@ -3282,6 +3285,7 @@ class GenericMethod
     $location_id,
     $category,
     $account_no,
+    $receipt_no,
     $id = 0
   ) {
     $transactions = DB::table("transactions")
@@ -3309,6 +3313,7 @@ class GenericMethod
       ->where("state", "!=", "void")
       ->where("utilities_location_id", $location_id)
       ->where("utilities_category", $category)
+      ->where("utilities_receipt_no", $receipt_no)
       ->when($id, function ($query, $id) {
         $query->where("id", "<>", $id);
       })
@@ -3323,6 +3328,7 @@ class GenericMethod
           "document.department.id",
           "document.utility.location.id",
           "document.utility.category.id",
+          "document.utility.receipt_no",
         ],
         [
           ["from has already been taken."],
@@ -3330,7 +3336,8 @@ class GenericMethod
           ["Company has already been taken."],
           ["Department has already been taken."],
           ["Utility Location has already been taken."],
-          ["Utility Category has already been taken."]
+          ["Utility Category has already been taken."],
+          ["SOA Number has already been taken."],
         ]
       );
     }
@@ -3362,6 +3369,7 @@ class GenericMethod
     $payroll_client,
     $payroll_type,
     $payroll_category,
+    $payroll_control_no,
     $id = 0
   ) {
     $duplicate_client = [];
@@ -3378,6 +3386,7 @@ class GenericMethod
         ->where("payroll_category", "$payroll_category")
         ->where("payroll_type", $payroll_type)
         ->where("client_name", $client_name)
+        ->whereNull("payroll_control_no")
         ->where("state", "!=", "void")
         ->when($id, function ($query, $id) {
           $query->where("transactions.id", "<>", $id);
@@ -3399,12 +3408,84 @@ class GenericMethod
               });
             });
         })
-        ->get();
+        ->count();
 
-      if (count($transactions) > 0) {
+        if (!is_null($payroll_control_no)) {
+          $controlNoTransactions = DB::table("transactions")
+            ->select("payroll_control_no")
+            ->where("company_id", $company_id)
+            ->where("department_id", $department_id)
+            ->where("location_id", $location_id)
+            ->where("supplier_id", $supplier_id)
+            ->where("payroll_category", "$payroll_category")
+            ->where("payroll_type", $payroll_type)
+            ->where("payroll_control_no", $payroll_control_no)
+            ->where("state", "!=", "void")
+            ->when($id, function ($query, $id) {
+              $query->where("transactions.id", "<>", $id);
+            })
+            ->where(function ($query) use ($payroll_from, $payroll_to) {
+              $query
+              ->where(function ($query) use ($payroll_from, $payroll_to) {
+                $query
+                  ->where(function ($query1) use ($payroll_from) {
+                    $query1->where("payroll_from", "<=", $payroll_from)->where("payroll_to", ">=", $payroll_from);
+                  })
+                  ->orWhere(function ($query2) use ($payroll_to) {
+                    $query2->where("payroll_from", "<=", $payroll_to)->where("payroll_to", ">=", $payroll_to);
+                  });
+              })
+              ->orWhere(function ($query) use ($payroll_from, $payroll_to) {
+                $query->where(function ($query1) use ($payroll_from, $payroll_to) {
+                  $query1->where("payroll_from", ">=", $payroll_from)->where("payroll_to", "<=", $payroll_to);
+                });
+              });
+            })
+            ->count();
+
+          if ($controlNoTransactions >= 1) {
+            array_push($duplicate_client, "Payroll control number");
+          } else {
+            return;
+          }
+        }
+
+      if ($transactions > 0) {
         array_push($duplicate_client, $client_name);
       }
     }
+
+    if (in_array("Payroll control number", $duplicate_client)) {
+      if (!empty($duplicate_client)) {
+        return GenericMethod::resultLaravelFormat(
+          [
+            "document.payroll.type",
+            "document.payroll.clients",
+            "document.payroll.category",
+            "document.from",
+            "document.to",
+            "document.company.id",
+            "document.department.id",
+            "document.location.id",
+            "document.supplier.id",
+            "document.payroll.control_no",
+          ],
+          [
+            ["Payroll type has already been taken."],
+            ["Payroll client has already been taken."],
+            ["Payroll category has already been taken."],
+            ["From has already been taken."],
+            ["To date has already been taken."],
+            ["Company has already been taken."],
+            ["Department has already been taken."],
+            ["Location has already been taken."],
+            ["Supplier has already been taken."],
+            ["Payroll control number has already been taken."],
+          ]
+        );
+      }
+    } 
+
     $duplicate_clients = GenericMethod::addAnd($duplicate_client);
     if (!empty($duplicate_client)) {
       return GenericMethod::resultLaravelFormat(
@@ -3431,6 +3512,8 @@ class GenericMethod
           ["Supplier has already been taken."],
         ]
       );
+    } else {
+      return;
     }
   }
 

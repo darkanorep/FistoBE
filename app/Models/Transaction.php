@@ -82,6 +82,7 @@ class Transaction extends Model
     "payroll_type",
     "payroll_from",
     "payroll_to",
+    "payroll_control_no",
 
     "referrence_type",
     "referrence_no",

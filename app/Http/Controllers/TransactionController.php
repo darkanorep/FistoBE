@@ -830,7 +830,8 @@ class TransactionController extends Controller
           $fields["document"]["supplier"]["id"],
           $fields["document"]["utility"]["location"]["id"],
           $fields["document"]["utility"]["category"]["name"],
-          $fields["document"]["utility"]["account_no"]["no"]
+          $fields["document"]["utility"]["account_no"]["no"],
+          data_get($fields, "document.utility.receipt_no")
         );
 
         // $request->validate([
@@ -884,7 +885,8 @@ class TransactionController extends Controller
           $fields["document"]["supplier"]["id"],
           $fields["document"]["payroll"]["clients"],
           $fields["document"]["payroll"]["type"],
-          $fields["document"]["payroll"]["category"]["name"]
+          $fields["document"]["payroll"]["category"]["name"],
+          data_get($fields, "document.payroll.control_no")
         );
 
         if (isset($duplicatePayroll)) {
@@ -1353,6 +1355,7 @@ class TransactionController extends Controller
           $fields["document"]["utility"]["location"]["id"],
           $fields["document"]["utility"]["category"]["name"],
           $fields["document"]["utility"]["account_no"]["no"],
+          data_get($fields, "document.utility.receipt_no"),
           $id
         );
         
@@ -1387,6 +1390,7 @@ class TransactionController extends Controller
           $fields["document"]["payroll"]["clients"],
           $fields["document"]["payroll"]["type"],
           $fields["document"]["payroll"]["category"]["name"],
+          data_get($fields, "document.payroll.control_no"),
           $id
         );
 

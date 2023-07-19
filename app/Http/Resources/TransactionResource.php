@@ -540,6 +540,7 @@ class TransactionResource extends JsonResource
               "id" => $this->payroll_category_id,
               "name" => $this->payroll_category,
             ],
+            "control_no" => $this->payroll_control_no
           ],
         ];
         break;
