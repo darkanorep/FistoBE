@@ -1,28 +1,29 @@
+<div align="center">
+  <img height="200" src="https://github.com/xoLilo/FistoFE/blob/094302c453c59b75c244eb8accfdb42dda21432b/src/assets/img/logo_s.png"  />
+</div>
 
-# Documentation
-## Two Ways in Running Laravel APIs
-- **PHP Artisan Command**
-- **Apache**
+###
 
-### PHP Artisan Command
- 1. Go to Project root folder.
- 2. Type PHP artisan serve.
-     •	Add `–host=` to change address.
+<h1 align="left">FISTO Backend</h1>
 
-### Laragon Apache
- 1. Rename server.php to index.php.
- 2. Move public `.htaccess` file to root folder.
- 3. Add folder name in API Address when accesing API thru Apache.
+###
 
+<p align="left">FISTO formally known as Crystales is a web application system used for monitoring the process of cash flow. This system can be utilized to manage and track the cash flow efficiently. <br><br>Knowing the status of an invoice or payment required and often asking for status of request is time-consuming. One of the significances of FISTO System is to show the status of your request and to eliminate the heavy excel file of the users. This system has the ability to track real time inflows and outflows and able to give the data required in a timely manner.</p>
 
-# Reference for Running APIs
- 
-[1. Artisan Command](https://laravel.com/docs/4.2/quick)
+###
 
-[2. Laragon Apache](https://www.youtube.com/watch?v=RFrnm5VAoP4)
+<h2 align="left">I code with...</h2>
 
+###
 
-# Format
-[Formating ReadMe in Github doc ](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
-<img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/github.svg" alt="laravel" width="20" height="20"/>
+<div align="left">
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg" height="40" alt="vscode logo"  />
+  <img width="12" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/laravel/laravel-plain.svg" height="40" alt="laravel logo"  />
+  <img width="12" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg" height="40" alt="php logo"  />
+  <img width="12" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" height="40" alt="mysql logo"  />
+</div>
 
+###
