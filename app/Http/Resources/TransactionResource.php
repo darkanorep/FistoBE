@@ -996,10 +996,14 @@ class TransactionResource extends JsonResource
     // PRM GROUP
     if ($this->document_type == "PRM Multiple") {
       switch ($this->category) {
+        case "stall a rental":
+        case "stall b rental":
+        case "stall c rental":
+        case "stall d rental":
+        case "cusa rental":
+        case "dorm rental":
         case "additional rental":
-          break;
         case "lounge rental":
-          break;
         case "rental":
           $prm_fields = Transaction::where("transaction_id", $this->transaction_id)
             ->select([
@@ -1012,6 +1016,8 @@ class TransactionResource extends JsonResource
             ])
             ->get();
           break;
+        case "official store leasing":
+        case "unofficial store leasing":
         case "leasing":
           $prm_fields = Transaction::where("transaction_id", $this->transaction_id)
             ->select([

@@ -1285,9 +1285,13 @@ class GenericMethod
 
       switch ($category) {
         case "additional rental":
-          break;
         case "lounge rental":
-          break;
+        case "stall a rental":
+        case "stall b rental":
+        case "stall c rental":
+        case "stall d rental":
+        case "cusa rental":
+        case "dorm rental":
         case "rental":
           $errors = [];
           $error_date_format = [];
@@ -1411,7 +1415,8 @@ class GenericMethod
             ]);
           }
           break;
-
+        case "official store leasing":
+        case "unofficial store leasing":
         case "leasing":
           $errors = [];
           $error_multiple_cheque = [];
